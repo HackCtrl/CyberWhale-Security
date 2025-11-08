@@ -1,0 +1,53 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "testuser",
+      "email": "test@example.com",
+      "password": "$2b$10$HuLC3VQnC7FvImK7BC33ueuPaC6vSVrCavAFpwVKeti2J/JTPHXfW",
+      "avatar": null,
+      "role": "user",
+      "points": 0,
+      "level": 1,
+      "emailVerified": true,
+      "verificationCode": null,
+      "resetPasswordCode": null,
+      "resetPasswordExpires": null,
+      "createdAt": "2025-11-08T17:40:00.000Z",
+      "updatedAt": "2025-11-08T17:40:00.000Z"
+    },
+    {
+      "id": 2,
+      "username": "kirill777",
+      "email": "kirill.ivanov08061@gmail.com",
+      "password": "$2b$10$Zh5f12uedH46dhUdXtvpvuQR968uFEIGD0vYbbzfTUaWF2DGddx82",
+      "avatar": null,
+      "role": "user",
+      "points": 0,
+      "level": 1,
+      "emailVerified": true,
+      "verificationCode": null,
+      "resetPasswordCode": null,
+      "resetPasswordExpires": null,
+      "createdAt": "2025-11-08T17:50:30.066Z",
+      "updatedAt": "2025-11-08T17:50:56.273Z"
+    },
+    {
+      "id": 3,
+      "username": "kirill778",
+      "email": "hvv59797@gmail.com",
+      "password": "$2b$10$sCJ5mWKREBoKiDZLlcBA0O3drKaN/mUuoGqmHr190K6112cugO0PK",
+      "avatar": null,
+      "role": "user",
+      "points": 0,
+      "level": 1,
+      "emailVerified": true,
+      "verificationCode": null,
+      "resetPasswordCode": null,
+      "resetPasswordExpires": null,
+      "createdAt": "2025-11-08T17:52:05.160Z",
+      "updatedAt": "2025-11-08T17:52:35.492Z"
+    }
+  ],
+  "challenges": []
+}

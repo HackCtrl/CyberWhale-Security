@@ -1,0 +1,21 @@
+{
+  "navbar": {
+    "products": "Products",
+    "ctf": "CTF Platform",
+    "ai_assistant": "AI Assistant",
+    "community": "Community",
+    "knowledge": "Knowledge Base",
+    "brand": "CYBERWHALE",
+    "login": "Log In",
+    "register": "Sign Up"
+  },
+  "login": {
+    "title": "Log In to Your Account",
+    "subtitle": "Or <a href='/register'>sign up if you don’t have an account</a>",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In",
+    "forgot_password": "Forgot Password?",
+    "social_login": "Continue with Social Media"
+  }
+}

@@ -1,0 +1,147 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 214 32% 91%;
+
+    --card: 222 47% 15%;
+    --card-foreground: 214 32% 91%;
+
+    --popover: 222 47% 15%;
+    --popover-foreground: 214 32% 91%;
+
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 222 47% 20%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 47% 20%;
+    --muted-foreground: 215 20.2% 75.1%;
+
+    --accent: 222 47% 22%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 40.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 25.5%;
+    --input: 217.2 32.6% 25.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 222 47% 13%;
+    --sidebar-foreground: 214 32% 91%;
+    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 17%;
+    --sidebar-accent-foreground: 214 32% 91%;
+    --sidebar-border: 222 47% 18%;
+    --sidebar-ring: 221 83% 53%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html, body {
+    @apply bg-cyberdark-900 text-foreground font-sans antialiased;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-cyberdark-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-cyberdark-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-cyberdark-500;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply backdrop-blur-md bg-cyberdark-900/80 border border-cyberdark-700;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-md bg-cyberdark-800/90 border border-cyberdark-700;
+  }
+
+  /* Custom animations */
+  .animate-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animate-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animate-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animate-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animate-delay-500 {
+    animation-delay: 500ms;
+  }
+  
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .animate-gradient {
+    animation: gradient 3s ease infinite;
+    background-size: 200% auto;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-cyberblue-400 to-cyberblue-600;
+  }
+
+  /* Custom button styles */
+  .btn-glow:hover {
+    @apply shadow-glow transition-shadow duration-300;
+  }
+
+  .page-transition-enter {
+    @apply opacity-0;
+  }
+  .page-transition-enter-active {
+    @apply opacity-100 transition-opacity duration-300;
+  }
+  .page-transition-exit {
+    @apply opacity-100;
+  }
+  .page-transition-exit-active {
+    @apply opacity-0 transition-opacity duration-300;
+  }
+}

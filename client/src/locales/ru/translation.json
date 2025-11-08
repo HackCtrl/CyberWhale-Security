@@ -1,0 +1,21 @@
+{
+  "navbar": {
+    "products": "Продукты",
+    "ctf": "CTF Платформа",
+    "ai_assistant": "ИИ Ассистент",
+    "community": "Сообщество",
+    "knowledge": "База знаний",
+    "brand": "CYBERWHALE",
+    "login": "Войти",
+    "register": "Зарегистрироваться"
+  },
+  "login": {
+    "title": "Войти в аккаунт",
+    "subtitle": "Или <a href='/register'>зарегистрироваться, если у вас еще нет аккаунта</a>",
+    "email": "Электронная почта",
+    "password": "Пароль",
+    "submit": "Войти",
+    "forgot_password": "Забыли пароль?",
+    "social_login": "Продолжить через соцсети"
+  }
+}
