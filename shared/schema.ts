@@ -35,13 +35,21 @@ export const challenges = pgTable("challenges", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  resetPasswordCode: true,
-  resetPasswordExpires: true,
+export const registrationSchema = z.object({
+  username: z.string().min(3, "Имя пользователя должно содержать минимум 3 символа").max(30),
+  email: z.string().email("Неверный формат email"),
+  password: z.string().min(6, "Пароль должен содержать минимум 6 символов"),
+  captchaToken: z.string().min(1, "Требуется подтверждение reCAPTCHA")
 });
+
+export const insertUserSchema = createInsertSchema(users)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+    resetPasswordCode: true,
+    resetPasswordExpires: true,
+  });
 
 export const insertChallengeSchema = createInsertSchema(challenges).omit({
   id: true,

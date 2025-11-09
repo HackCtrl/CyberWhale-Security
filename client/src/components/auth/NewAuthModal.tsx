@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Mail, Eye, EyeOff, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthProvider';
+import { Captcha } from '@/components/ui/captcha';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
   // Form states
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
+  const [captchaToken, setCaptchaToken] = useState<string>('');
   const [verifyForm, setVerifyForm] = useState({ email: '', code: '' });
   const [forgotForm, setForgotForm] = useState({ email: '' });
   const [resetForm, setResetForm] = useState({ email: '', code: '', newPassword: '', confirmPassword: '' });
@@ -61,7 +63,13 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
     
     setIsLoading(true);
     try {
-      const result = await register(registerForm.username, registerForm.email, registerForm.password);
+      if (!captchaToken) {
+        alert('Пожалуйста, подтвердите, что вы не робот');
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await register(registerForm.username, registerForm.email, registerForm.password, captchaToken);
       
       if (result.success && result.verificationRequired) {
         setVerifyForm({ email: registerForm.email, code: '' });
@@ -495,10 +503,15 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
                   />
                 </div>
                 
+                <Captcha
+                  siteKey="6Lf2QwcsAAAAAHoTaNJZhsAXCnqP-hokgbAocrJx"
+                  onVerify={(token) => setCaptchaToken(token)}
+                />
+
                 <Button
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700"
-                  disabled={isLoading}
+                  disabled={isLoading || !captchaToken}
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Зарегистрироваться'}
                 </Button>

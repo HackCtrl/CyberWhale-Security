@@ -4,8 +4,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { storage } from "./storage";
-import { insertUserSchema, insertChallengeSchema } from "@shared/schema";
+import { insertUserSchema, insertChallengeSchema, registrationSchema } from "@shared/schema";
 import { emailService } from "./emailService";
+import { verifyCaptcha } from "./captcha";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -35,7 +36,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Step 1: Register user (creates unverified account)
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { username, email, password } = insertUserSchema.parse(req.body);
+      // Валидация входных данных
+      const validationResult = registrationSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Неверные данные для регистрации",
+          errors: validationResult.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
+      const { username, email, password, captchaToken } = validationResult.data;
+
+      // Проверяем капчу
+      const isValidCaptcha = await verifyCaptcha(captchaToken);
+      if (!isValidCaptcha) {
+        return res.status(400).json({ 
+          message: "Проверка reCAPTCHA не пройдена. Пожалуйста, попробуйте еще раз",
+          field: "captcha"
+        });
+      }
       
       // Check if username is taken
       console.log('Checking username:', username);

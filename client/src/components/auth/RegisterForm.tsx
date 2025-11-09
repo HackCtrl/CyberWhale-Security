@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Captcha } from '@/components/ui/captcha';
 
 export function RegisterForm() {
   const [username, setUsername] = useState('');
@@ -15,9 +16,15 @@ export function RegisterForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [suggestedUsernames, setSuggestedUsernames] = useState<string[]>([]);
+  const [captchaToken, setCaptchaToken] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   
-  const { register, isLoading, error } = useAuth();
+  const { register, isLoading } = useAuth();
   const navigate = useNavigate();
+  
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,15 +33,20 @@ export function RegisterForm() {
       return; // Password mismatch is handled by form validation
     }
     
+    if (!captchaToken) {
+      setError('Пожалуйста, подтвердите, что вы не робот');
+      return;
+    }
+
     try {
-      const response = await register(username, email, password);
+      const response = await register(username, email, password, captchaToken);
       if (response.suggestedUsernames) {
         setSuggestedUsernames(response.suggestedUsernames);
       } else {
         navigate('/');
       }
-    } catch (err) {
-      // Error is handled by the auth context
+    } catch (err: any) {
+      setError(err.message || 'Произошла ошибка при регистрации');
       console.error('Registration error:', err);
     }
   };
@@ -170,10 +182,15 @@ export function RegisterForm() {
           </Label>
         </div>
 
-        <div>
+        <div className="space-y-4">
+          <Captcha
+            siteKey="6Lf2QwcsAAAAAHoTaNJZhsAXCnqP-hokgbAocrJx"
+            onVerify={handleCaptchaVerify}
+          />
+          
           <Button
             type="submit"
-            disabled={isLoading || (!!confirmPassword && password !== confirmPassword)}
+            disabled={isLoading || (!!confirmPassword && password !== confirmPassword) || !captchaToken}
             className="w-full bg-cyberblue-500 hover:bg-cyberblue-600"
           >
             {isLoading ? (

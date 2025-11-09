@@ -18,7 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   
   // Auth methods
-  register: (username: string, email: string, password: string) => Promise<{ success: boolean; verificationRequired?: boolean; developmentCode?: string; message?: string; suggestedUsernames?: string[] }>;
+  register: (username: string, email: string, password: string, captchaToken: string) => Promise<{ success: boolean; verificationRequired?: boolean; developmentCode?: string; message?: string; suggestedUsernames?: string[] }>;
   verifyEmail: (email: string, code: string) => Promise<{ success: boolean; message?: string }>;
   login: (email: string, password: string) => Promise<{ success: boolean; emailVerificationRequired?: boolean; message?: string }>;
   logout: () => void;
@@ -81,11 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Register new user
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (username: string, email: string, password: string, captchaToken: string) => {
     try {
       const data = await apiCall('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password, captchaToken }),
       });
 
       toast({
