@@ -1,0 +1,16 @@
+{
+  "nextId": 2,
+  "tasks": [
+    {
+      "id": "001",
+      "code": "43101",
+      "title": "Auth enhancement: 2FA + OAuth + security hardening",
+      "status": "open",
+      "assignee": null,
+      "start": "2025-11-23",
+      "end": "2025-11-29",
+      "progress": 65,
+      "tags": ["auth","mvp","security"]
+    }
+  ]
+}

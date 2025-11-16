@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>CyberWhale — Gantt Viewer</title>
+  <style>
+    body{font-family:Inter,Arial;margin:16px;background:#0b1220;color:#e6eef8}
+    .chart{max-width:1000px}
+    .row{display:flex;align-items:center;margin:6px 0}
+    .label{width:220px}
+    .bar-wrap{flex:1;background:rgba(255,255,255,0.03);padding:6px;border-radius:6px}
+    .bar{height:28px;background:#3b82f6;border-radius:6px;display:inline-block;color:#fff;padding:4px 8px}
+    .meta{font-size:12px;color:#9fb0cc;margin-left:8px}
+    .controls{margin-bottom:12px}
+    button{background:#0ea5a4;border:0;padding:6px 10px;color:#042;cursor:pointer;border-radius:6px}
+  </style>
+</head>
+<body>
+  <h2>Gantt — CyberWhale (viewer)</h2>
+  <div class="controls">
+    <button id="reload">Reload tasks</button>
+    <span style="margin-left:12px;color:#9fb0cc">Интерактивно: клик по строке откроет файл задачи.</span>
+  </div>
+  <div class="chart" id="chart"></div>
+
+  <script>
+    async function load(){
+      try{
+        const res = await fetch('/tasks/index.json');
+        const data = await res.json();
+        render(data.tasks);
+      }catch(e){
+        document.getElementById('chart').innerText = 'Не удалось загрузить /tasks/index.json — убедитесь, что dev-server запущен.'
+      }
+    }
+    function render(tasks){
+      const container = document.getElementById('chart'); container.innerHTML='';
+      // compute timeline range
+      const dates = tasks.flatMap(t=>[t.start,t.end]).filter(x=>x);
+      const min = new Date(Math.min(...dates.map(d=>new Date(d))));
+      const max = new Date(Math.max(...dates.map(d=>new Date(d))));
+      const totalDays = Math.max(1, Math.round((max-min)/(1000*60*60*24)));
+      tasks.forEach(t=>{
+        const row = document.createElement('div'); row.className='row';
+        const label = document.createElement('div'); label.className='label'; label.innerHTML = `<strong>${t.id} — ${t.title}</strong><div class="meta">${t.code||''} • ${t.status} • ${t.progress}%</div>`;
+        const barWrap = document.createElement('div'); barWrap.className='bar-wrap';
+        const s = t.start?Math.round((new Date(t.start)-min)/(1000*60*60*24)):0;
+        const e = t.end?Math.round((new Date(t.end)-min)/(1000*60*60*24)):s+1;
+        const leftPct = (s/ (totalDays||1))*100; const widthPct = ((Math.max(1,e-s))/ (totalDays||1))*100;
+        const bar = document.createElement('div'); bar.className='bar'; bar.style.marginLeft = leftPct+'%'; bar.style.width = widthPct+'%'; bar.innerText = t.progress + '%';
+        barWrap.appendChild(bar);
+        row.appendChild(label); row.appendChild(barWrap);
+        row.onclick = ()=>{ window.open('/tasks/'+String(t.id).padStart(3,'0') + '-' + t.title.toLowerCase().replace(/[^a-z0-9]+/gi,'-') + '.md','_blank') };
+        container.appendChild(row);
+      })
+    }
+    document.getElementById('reload').onclick = load;
+    load();
+  </script>
+</body>
+</html>
