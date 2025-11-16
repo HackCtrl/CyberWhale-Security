@@ -330,7 +330,7 @@ export default function KnowledgeBase() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <div className="bg-cyberdark-700 rounded-full p-2">
-                        {categoryIcons[article.category]}
+                        {(categoryIcons as any)[article.category]}
                       </div>
                       <span className="text-sm font-medium text-gray-300">
                         {article.category === 'web-security' && 'Веб-безопасность'}
@@ -342,7 +342,7 @@ export default function KnowledgeBase() {
                         {article.category === 'forensics' && 'Форензика'}
                       </span>
                     </div>
-                    <div className={`text-xs font-medium px-2 py-1 rounded-full border ${difficultyColors[article.difficulty]}`}>
+                    <div className={`text-xs font-medium px-2 py-1 rounded-full border ${(difficultyColors as any)[article.difficulty]}`}>
                       {article.difficulty === 'beginner' && 'Начальный'}
                       {article.difficulty === 'intermediate' && 'Средний'}
                       {article.difficulty === 'advanced' && 'Продвинутый'}

@@ -10,12 +10,14 @@ interface User {
   points: number;
   level: number;
   emailVerified: boolean;
+  createdAt?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  error?: string | null;
   
   // Auth methods
   register: (username: string, email: string, password: string, captchaToken: string) => Promise<{ success: boolean; verificationRequired?: boolean; developmentCode?: string; message?: string; suggestedUsernames?: string[] }>;
@@ -23,9 +25,13 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; emailVerificationRequired?: boolean; message?: string }>;
   logout: () => void;
   resendVerification: (email: string) => Promise<{ success: boolean; developmentCode?: string; message?: string }>;
+  // If called with one argument -> request reset (forgot). If called with three -> perform reset.
+  resetPassword: (...args: any[]) => Promise<{ success: boolean; developmentCode?: string; message?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; developmentCode?: string; message?: string }>;
-  resetPassword: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
   updateProfile: (updates: Partial<User>) => Promise<{ success: boolean; message?: string }>;
+  // Additional helpers expected in UI
+  verifyOtp: (email: string, code: string) => Promise<{ success: boolean; message?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -33,6 +39,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // API helper function
@@ -235,37 +242,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         developmentCode: data.developmentCode,
         message: data.message 
       };
-    } catch (error: any) {
+    } catch (err: any) {
+      const msg = err?.message || 'Ошибка восстановления';
+      setError(msg);
       toast({
         title: "Ошибка восстановления",
-        description: error.message,
+        description: msg,
         variant: "destructive",
       });
-      return { success: false, message: error.message };
+      return { success: false, message: msg };
     }
   };
 
   // Reset password with code
-  const resetPassword = async (email: string, code: string, newPassword: string) => {
+  // Flexible resetPassword: if called with one argument -> request reset; if with three -> confirm reset
+  const resetPassword = async (...args: any[]) => {
     try {
-      const data = await apiCall('/auth/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({ email, code, newPassword }),
-      });
-
-      toast({
-        title: "Пароль изменен",
-        description: data.message,
-      });
-
-      return { success: true, message: data.message };
-    } catch (error: any) {
-      toast({
-        title: "Ошибка сброса пароля",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { success: false, message: error.message };
+      if (args.length === 1) {
+        // request reset
+        const email = args[0];
+        const data = await apiCall('/auth/forgot-password', {
+          method: 'POST',
+          body: JSON.stringify({ email }),
+        });
+        toast({ title: 'Код восстановления отправлен', description: data.message });
+        return { success: true, developmentCode: data.developmentCode, message: data.message };
+      } else if (args.length === 3) {
+        const [email, code, newPassword] = args;
+        const data = await apiCall('/auth/reset-password', {
+          method: 'POST',
+          body: JSON.stringify({ email, code, newPassword }),
+        });
+        toast({ title: 'Пароль изменен', description: data.message });
+        return { success: true, message: data.message };
+      } else {
+        throw new Error('Invalid arguments to resetPassword');
+      }
+    } catch (err: any) {
+      const msg = err?.message || 'Ошибка сброса пароля';
+      setError(msg);
+      toast({ title: 'Ошибка сброса пароля', description: msg, variant: 'destructive' });
+      return { success: false, message: msg };
     }
   };
 
@@ -295,10 +312,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // verifyOtp wrapper (used by VerifyOTP page)
+  const verifyOtp = async (email: string, code: string) => {
+    return verifyEmail(email, code);
+  };
+
+  // updatePassword wrapper to be used by ResetPassword page (expects one arg)
+  const updatePassword = async (newPassword: string) => {
+    // Try to read reset email/code from sessionStorage/localStorage if present
+    const email = localStorage.getItem('reset_email') || undefined;
+    const code = localStorage.getItem('reset_code') || undefined;
+    if (!email || !code) {
+      throw new Error('Missing reset email or code');
+    }
+    return resetPassword(email, code, newPassword);
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated: !!user,
+    error,
     register,
     verifyEmail,
     login,
@@ -307,6 +341,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     forgotPassword,
     resetPassword,
     updateProfile,
+    verifyOtp,
+    updatePassword,
   };
 
   return (

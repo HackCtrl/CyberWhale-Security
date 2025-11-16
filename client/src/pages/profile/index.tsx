@@ -57,7 +57,7 @@ export default function Profile() {
               {user.role === 'admin' ? 'Администратор' : 'Пользователь'}
             </Badge>
             <Badge variant="outline" className="border-cyberblue-500 text-cyberblue-500">
-              Зарегистрирован {new Date(user.createdAt).toLocaleDateString()}
+              Зарегистрирован {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
             </Badge>
           </div>
         </div>

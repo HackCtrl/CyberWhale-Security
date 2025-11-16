@@ -1,5 +1,6 @@
 
 import { Challenge } from '@/types';
+export type { Challenge };
 
 // Mock CTF challenges data
 export const mockChallenges: Challenge[] = [

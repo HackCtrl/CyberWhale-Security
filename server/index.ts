@@ -83,24 +83,40 @@ app.use((req, res, next) => {
       console.warn('Skipping static file serving (no built client):', String(e));
     }
 
-    // ALWAYS serve the app on port 5000
-    // this serves both the API and the client.
-    // It is the only port that is not firewalled.
-    const port = 5000;
-    const listenOptions: any = { port, host: "0.0.0.0" };
-    // reusePort is not supported on some platforms (notably Windows), avoid passing it there
-    if (process.platform !== "win32") {
-      listenOptions.reusePort = true;
+    // Serve the app on configurable port (default 5000). If port is busy, try next ports.
+    const basePort = Number(process.env.PORT) || 5000;
+    const maxAttempts = 10;
+
+    let boundPort: number | null = null;
+    let lastErr: any = null;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const port = basePort + attempt;
+      const listenOptions: any = { port, host: "0.0.0.0" };
+      if (process.platform !== "win32") {
+        listenOptions.reusePort = true;
+      }
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          server.listen(listenOptions, () => {
+            boundPort = port;
+            log(`serving on port ${port}`);
+            resolve();
+          }).on('error', reject);
+        });
+        break;
+      } catch (e) {
+        lastErr = e;
+        console.warn(`Port ${port} busy or failed, trying next port...`);
+        // continue to next attempt
+      }
     }
 
-    await new Promise<void>((resolve, reject) => {
-      server.listen(listenOptions, () => {
-        log(`serving on port ${port}`);
-        resolve();
-      }).on('error', reject);
-    });
-
-    console.log('Server startup complete');
+    if (boundPort == null) {
+      throw lastErr || new Error('Failed to bind to any port');
+    }
+    console.log('Server startup complete on port', boundPort);
 
   } catch (e) {
     console.error('Server startup error:', e);

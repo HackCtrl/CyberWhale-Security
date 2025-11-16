@@ -26,7 +26,7 @@ export default function AddChallenge() {
   const navigate = useNavigate();
 
   const handleTestImport = () => {
-    fetch('/test-challenge.json', { method: 'GET' })
+    fetch('/assets/test-challenge.json', { method: 'GET' })
       .then(response => {
         if (!response.ok) {
           throw new Error(`Не удалось загрузить файл (статус: ${response.status})`);
@@ -40,7 +40,7 @@ export default function AddChallenge() {
           throw new Error('JSON должен быть массивом');
         }
 
-        const newChallenges: Challenge[] = json.map((item: ChallengeInput) => {
+  const newChallenges = json.map((item: ChallengeInput) => {
           alert(`Проверяем кейс: ${JSON.stringify(item)}`);
           if (!item.id || !item.title || !item.description || !item.category || !item.difficulty || !item.points || !item.tags || !item.solvedBy) {
             throw new Error('Некорректный формат кейса: отсутствуют обязательные поля');
@@ -68,7 +68,7 @@ export default function AddChallenge() {
             downloadUrl: item.downloadUrl || '',
             fileType: item.fileType || '',
           };
-        });
+  }) as Challenge[];
 
         const existingIds = new Set(mockChallenges.map(c => c.id));
         for (const challenge of newChallenges) {

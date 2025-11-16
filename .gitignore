@@ -1,3 +1,25 @@
+# Node / React
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.production
+
+# Логи и бэкапы
+*.log
+backup/
+cleanup_backup_*/
+*.7z
+*.zip
+*.bak
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# VeraCrypt контейнеры
+*.hc
 node_modules
 dist
 .DS_Store

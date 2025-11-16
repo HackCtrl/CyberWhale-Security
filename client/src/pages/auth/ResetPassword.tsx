@@ -43,6 +43,7 @@ export default function ResetPassword() {
     setError(null);
     
     try {
+      if (!updatePassword) throw new Error('updatePassword not available');
       await updatePassword(password);
       setIsSubmitted(true);
     } catch (err: any) {

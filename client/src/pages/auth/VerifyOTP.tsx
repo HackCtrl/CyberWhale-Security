@@ -25,6 +25,7 @@ export default function VerifyOTP() {
     e.preventDefault();
     
     try {
+      if (!verifyOtp) throw new Error('verifyOtp not available');
       await verifyOtp(email, otp);
       navigate('/');
     } catch (err) {
