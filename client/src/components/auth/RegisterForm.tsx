@@ -183,10 +183,10 @@ export function RegisterForm() {
         </div>
 
         <div className="space-y-4">
-          <Captcha
-            siteKey="6Lf2QwcsAAAAAHoTaNJZhsAXCnqP-hokgbAocrJx"
-            onVerify={handleCaptchaVerify}
-          />
+            <Captcha
+              siteKey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6Lf2QwcsAAAAAHoTaNJZhsAXCnqP-hokgbAocrJx'}
+              onVerify={handleCaptchaVerify}
+            />
           
           <Button
             type="submit"
