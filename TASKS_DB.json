@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "last_id": 58,
+  "last_id": 59,
   "tasks": [
     {
       "local_id": "01",
@@ -464,6 +464,15 @@
       "title": "1970-01-01 03:00:43.194000",
       "status": "todo",
       "percent": 0.0,
+      "assignee": ""
+    }
+    ,
+    {
+      "local_id": "59",
+      "gantt_id": "",
+      "title": "Captcha: reCAPTCHA backend + frontend integration",
+      "status": "in-progress",
+      "percent": 10.0,
       "assignee": ""
     }
   ],
