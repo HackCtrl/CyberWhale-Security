@@ -1,49 +1,25 @@
-param(
-    [string]$commitMessage = "chore: daily: automatic daily backup and report"
+# Создаёт zip-архив текущего репозитория (без node_modules), сохраняет в backups/, делает git commit и push.
+Param(
+    [string]$Message = "chore: daily backup and progress snapshot"
 )
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$proj = Join-Path $root ".." | Resolve-Path
-$proj = Join-Path $root ".."
+$root = Resolve-Path -Path "..\..\"
+Set-Location $root
 
-Write-Host "[automation] Запуск ежедневного завершения: отчёт, бэкап, commit+push"
+$ts = Get-Date -Format "yyyyMMdd_HHmmss"
+$dest = Join-Path -Path "$PWD\backups" -ChildPath "backup_$ts.zip"
+if (-not (Test-Path "$PWD\backups")) { New-Item -ItemType Directory -Path "$PWD\backups" | Out-Null }
 
-$timestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
-$backupDir = Join-Path $proj "backups"
-if (-not (Test-Path $backupDir)) { New-Item -ItemType Directory -Path $backupDir | Out-Null }
+# Исключаем node_modules и .git
+$exclude = @('node_modules','dist','.git')
+$temp = Join-Path $env:TEMP "cw_filelist_$ts.txt"
+Get-ChildItem -Recurse -File | Where-Object { $exclude -notcontains $_.Directory.Name } | ForEach-Object { $_.FullName } | Set-Content -Path $temp
 
-$archivePath = Join-Path $backupDir ("backup_$timestamp.zip")
-Write-Host "Архивация проекта в $archivePath"
-try {
-    Compress-Archive -Path (Join-Path $proj '*') -DestinationPath $archivePath -Force
-    Write-Host "Архивация прошла успешно"
-} catch {
-    Write-Host "Ошибка архивации: $_"
-}
+Compress-Archive -Path (Get-ChildItem -Recurse | Where-Object { $exclude -notcontains $_.Directory.Name }) -DestinationPath $dest -Force
 
-# Генерация простого отчёта
-$reports = Join-Path $proj "reports"
-if (-not (Test-Path $reports)) { New-Item -ItemType Directory -Path $reports | Out-Null }
-$reportFile = Join-Path $reports ("daily_report_$timestamp.md")
-@"
-# Ежедневный отчёт автоматом
+Write-Host "Backup created: $dest"
 
-Дата: $(Get-Date -Format yyyy-MM-dd HH:mm:ss)
-
-Действия: архив проекта -> $archivePath
-"@ | Set-Content $reportFile -Encoding UTF8
-Write-Host "Создан отчёт: $reportFile"
-
-# Git commit and push
-Push-Location $proj
-try {
-    git add .
-    git commit -m $commitMessage
-    git push
-    Write-Host "Коммит и push выполнены"
-} catch {
-    Write-Host "Git commit/push завершился с ошибкой или нет изменений: $_"
-}
-Pop-Location
-
-Write-Host "Ежедневное завершение выполнено."
+# Git add/commit/push
+git add -A
+git commit -m $Message
+git push
