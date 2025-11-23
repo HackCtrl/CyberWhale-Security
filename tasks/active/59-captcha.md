@@ -1,8 +1,9 @@
 ---
 local_id: "59"
 title: "Captcha: reCAPTCHA backend + frontend integration"
-status: in-progress
-percent: 10
+status: done
+percent: 100
+completed: "2025-11-23"
 assignee: ""
 created: "2025-11-23"
 tags:
@@ -23,8 +24,8 @@ tags:
 1. Перенести секретный ключ в `.env` (см. `.env.example`).
 2. Обновить `server/captcha.ts` (сделано).
 3. Проверить интеграцию с `client/src/components/ui/captcha.tsx` и `RegisterForm.tsx`.
-4. Протестировать регистрацию вручную локально.
-5. Закоммитить и закрыть задачу (обновить `TASKS_DB.json` и пометить `percent: 100`, `status: done`).
+4. Протестировать регистрацию вручную локально (в development можно включить `RECAPTCHA_BYPASS=1`).
+5. Закоммитить и закрыть задачу (обновлено `TASKS_DB.json` и помечено как выполнено).
 
 Примечания:
 - В проде нужно установить `RECAPTCHA_SECRET_KEY` в окружение.

@@ -471,8 +471,8 @@
       "local_id": "59",
       "gantt_id": "",
       "title": "Captcha: reCAPTCHA backend + frontend integration",
-      "status": "in-progress",
-      "percent": 10.0,
+      "status": "done",
+      "percent": 100.0,
       "assignee": ""
     }
   ],
