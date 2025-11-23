@@ -119,13 +119,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send verification email to the provided email address
       await emailService.sendVerificationEmail(email, verificationCode);
-      
-      res.status(201).json({
+
+      const responsePayload: any = {
         message: "Регистрация прошла успешно! На указанный email отправлен код подтверждения.",
         userId: user.id,
         email: user.email,
         verificationRequired: true
-      });
+      };
+
+      // In development, include the code in the response for easier testing/debugging
+      if (process.env.NODE_ENV === 'development') {
+        responsePayload.developmentCode = verificationCode;
+      }
+
+      res.status(201).json(responsePayload);
     } catch (error) {
       console.error("Registration error:", error);
       if (error instanceof z.ZodError) {
@@ -249,10 +256,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send verification email
       await emailService.sendVerificationEmail(email, verificationCode);
-      
-      res.json({
-        message: "Код подтверждения отправлен повторно на указанный email."
-      });
+
+      const payload: any = { message: "Код подтверждения отправлен повторно на указанный email." };
+      if (process.env.NODE_ENV === 'development') payload.developmentCode = verificationCode;
+
+      res.json(payload);
     } catch (error) {
       console.error("Resend verification error:", error);
       res.status(500).json({ message: "Ошибка при повторной отправке кода" });
