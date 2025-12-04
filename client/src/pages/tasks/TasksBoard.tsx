@@ -44,7 +44,12 @@ export default function TasksBoard() {
   const [reportingTask, setReportingTask] = useState<any | null>(null)
   const [reportSummary, setReportSummary] = useState('')
   const [evidenceLink, setEvidenceLink] = useState('')
-  const [reportFile, setReportFile] = useState<File | null>(null)
+  const [reportFiles, setReportFiles] = useState<File[] | null>(null)
+  const [filterStatus, setFilterStatus] = useState<string | null>(null)
+  const [filterAssignee, setFilterAssignee] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [newTask, setNewTask] = useState<any>({ title: '', description: '', epic: '', priority: 'medium', estimate_days: 1 })
 
   useEffect(() => {
     // fetch tasks from API, fallback to static data
@@ -60,7 +65,12 @@ export default function TasksBoard() {
 
   const grouped = useMemo(() => {
     const out: Record<number, any[]> = {1: [],2:[],3:[],4:[]}
-    const source = tasks || tasksData
+    const source = (tasks || tasksData).filter((t:any)=>{
+      if (filterStatus && t.status !== filterStatus) return false
+      if (filterAssignee && t.assignee !== filterAssignee) return false
+      if (search && !`${t.title} ${t.description || ''}`.toLowerCase().includes(search.toLowerCase())) return false
+      return true
+    })
     source.forEach((t: any) => {
       // try to determine month from tags like 'month:1' or fallback to t.month
       let m = 1
@@ -78,6 +88,19 @@ export default function TasksBoard() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-4">Roadmap MVP — 4 месяца</h1>
       <p className="text-sm text-muted-foreground mb-6">Интерактивная панель задач. Каждая колонка — месяц, карточки — задачи со статусом и критериями приёмки.</p>
+
+      <div className="mb-4 flex gap-2 items-center">
+        <input className="border p-2" placeholder="Поиск по заголовку" value={search} onChange={e=>setSearch(e.target.value)} />
+        <select className="border p-2" value={filterStatus||''} onChange={e=>setFilterStatus(e.target.value||null)}>
+          <option value="">Все статусы</option>
+          <option value="backlog">Бэклог</option>
+          <option value="todo">В очереди</option>
+          <option value="in-progress">В работе</option>
+          <option value="review">На проверке</option>
+          <option value="done">Готово</option>
+        </select>
+        <button className="px-3 py-1 bg-cyberdark-700 text-white" onClick={()=>setCreating(true)}>Создать задачу</button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {([1,2,3,4] as const).map(month => {
@@ -131,6 +154,10 @@ export default function TasksBoard() {
                             <ul className="list-disc pl-5 mt-2 text-sm text-muted-foreground">
                               {task.acceptance?.map((a,i)=>(<li key={i}>{a}</li>))}
                             </ul>
+                            <div className="mt-3">
+                              <div className="text-sm font-medium">Вложения</div>
+                              <TaskAttachments taskId={task.id} />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -148,6 +175,31 @@ export default function TasksBoard() {
           )
         })}
       </div>
+      {creating && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-bold mb-2">Создать задачу</h3>
+            <input className="w-full border p-2 mb-2" placeholder="Заголовок" value={newTask.title} onChange={e=>setNewTask({...newTask, title: e.target.value})} />
+            <textarea className="w-full border p-2 mb-2" placeholder="Описание" value={newTask.description} onChange={e=>setNewTask({...newTask, description: e.target.value})} />
+            <div className="flex gap-2 justify-end">
+              <button className="px-3 py-1 border" onClick={()=>setCreating(false)}>Отмена</button>
+              <button className="px-3 py-1 bg-cyberdark-700 text-white" onClick={async ()=>{
+                const resp = await fetch('/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newTask) })
+                if (resp.ok) {
+                  const t = await resp.json()
+                  const data = await fetch('/api/tasks').then(r=>r.json())
+                  setTasks(data)
+                  setCreating(false)
+                  setNewTask({ title: '', description: '', epic: '', priority: 'medium', estimate_days: 1 })
+                } else {
+                  alert('Ошибка создания')
+                }
+              }}>Создать</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {reportingTask && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white rounded p-6 w-full max-w-2xl">
@@ -155,20 +207,22 @@ export default function TasksBoard() {
             <div className="mb-2 text-sm text-muted-foreground">ID: {reportingTask.id}</div>
             <textarea value={reportSummary} onChange={e=>setReportSummary(e.target.value)} className="w-full border p-2 mb-2" placeholder="Краткое описание проделанной работы" />
             <input value={evidenceLink} onChange={e=>setEvidenceLink(e.target.value)} className="w-full border p-2 mb-2" placeholder="Ссылка на CI/PR (необязательно)" />
-            <input type="file" onChange={e=>setReportFile(e.target.files ? e.target.files[0] : null)} className="mb-2" />
+            <input type="file" multiple onChange={e=>setReportFiles(e.target.files ? Array.from(e.target.files) : null} className="mb-2" />
             <div className="flex gap-2 justify-end">
               <button className="px-3 py-1 border" onClick={()=>{ setReportingTask(null); setReportSummary(''); setReportFile(null); setEvidenceLink(''); }}>Отмена</button>
               <button className="px-3 py-1 bg-cyberdark-700 text-white" onClick={async ()=>{
                 // submit report: upload file if present, then post report
                 const id = reportingTask.id
                 const attachments: any[] = []
-                if (reportFile) {
-                  const form = new FormData()
-                  form.append('file', reportFile)
-                  const up = await fetch(`/api/tasks/${id}/attachments`, { method: 'POST', body: form })
-                  if (up.ok) {
-                    const meta = await up.json()
-                    attachments.push(meta.path)
+                if (reportFiles && reportFiles.length) {
+                  for (const f of reportFiles) {
+                    const form = new FormData()
+                    form.append('file', f)
+                    const up = await fetch(`/api/tasks/${id}/attachments`, { method: 'POST', body: form })
+                    if (up.ok) {
+                      const meta = await up.json()
+                      attachments.push(meta.path)
+                    }
                   }
                 }
                 const payload: any = { summary: reportSummary, attachments }
@@ -180,7 +234,7 @@ export default function TasksBoard() {
                   setTasks(data)
                   setReportingTask(null)
                   setReportSummary('')
-                  setReportFile(null)
+                  setReportFiles(null)
                   setEvidenceLink('')
                 } else {
                   const err = await resp.json().catch(()=>({message:'Ошибка'}))
@@ -192,5 +246,24 @@ export default function TasksBoard() {
         </div>
       )}
     </div>
+  )
+}
+
+function TaskAttachments({ taskId }: { taskId: string }) {
+  const [atts, setAtts] = useState<any[] | null>(null)
+  useEffect(()=>{
+    let mounted = true
+    fetch(`/api/tasks/${taskId}/attachments`).then(r=>r.json()).then(data=>{ if (mounted) setAtts(data) }).catch(()=>{ if (mounted) setAtts([]) })
+    return ()=>{ mounted = false }
+  }, [taskId])
+
+  if (!atts) return <div className="text-sm text-muted-foreground">Загрузка...</div>
+  if (atts.length === 0) return <div className="text-sm text-muted-foreground">Нет вложений</div>
+  return (
+    <ul className="list-disc pl-5 text-sm">
+      {atts.map(a=> (
+        <li key={a.id}><a className="text-cyberdark-700" href={a.path} target="_blank" rel="noreferrer">{a.filename}</a> — {Math.round((a.size||0)/1024)} KB</li>
+      ))}
+    </ul>
   )
 }

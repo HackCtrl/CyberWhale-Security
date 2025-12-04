@@ -101,4 +101,13 @@ router.post('/:id/attachments', upload.single('file'), (req: Request, res: Respo
   res.status(201).json(meta);
 });
 
+// Get attachments for a task
+router.get('/:id/attachments', (req: Request, res: Response) => {
+  const id = String(req.params.id);
+  const task = db.getTask(id);
+  if (!task) return res.status(404).json({ message: 'Task not found' });
+  const atts = db.getAttachments(id) || [];
+  res.json(atts);
+});
+
 export default router;
