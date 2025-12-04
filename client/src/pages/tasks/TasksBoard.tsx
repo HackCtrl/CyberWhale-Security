@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import tasksData from '@/data/mvpRoadmap'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -39,15 +39,40 @@ const statusLabel = (status: string) => {
 
 export default function TasksBoard() {
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [tasks, setTasks] = useState<any[] | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [reportingTask, setReportingTask] = useState<any | null>(null)
+  const [reportSummary, setReportSummary] = useState('')
+  const [evidenceLink, setEvidenceLink] = useState('')
+  const [reportFile, setReportFile] = useState<File | null>(null)
+
+  useEffect(() => {
+    // fetch tasks from API, fallback to static data
+    let mounted = true
+    setLoading(true)
+    fetch('/api/tasks')
+      .then(r => r.json())
+      .then(data => { if (mounted) setTasks(data) })
+      .catch(() => { if (mounted) setTasks(tasksData as any) })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
+  }, [])
 
   const grouped = useMemo(() => {
-    const out: Record<number, typeof tasksData> = {1: [],2:[],3:[],4:[]}
-    tasksData.forEach(t => {
-      const m = Math.max(1, Math.min(4, t.month))
+    const out: Record<number, any[]> = {1: [],2:[],3:[],4:[]}
+    const source = tasks || tasksData
+    source.forEach((t: any) => {
+      // try to determine month from tags like 'month:1' or fallback to t.month
+      let m = 1
+      if (Array.isArray(t.tags)) {
+        const mtag = t.tags.find((x: string) => x && x.startsWith && x.startsWith('month:'))
+        if (mtag) m = Number(mtag.split(':')[1]) || 1
+      }
+      if (typeof t.month === 'number') m = Math.max(1, Math.min(4, t.month))
       out[m].push(t)
     })
     return out
-  }, [])
+  }, [tasks])
 
   return (
     <div className="p-6">
@@ -94,7 +119,7 @@ export default function TasksBoard() {
                         </div>
                         <div className="mt-3 flex justify-between items-center">
                           <div className="flex gap-2">
-                            <button className="text-xs px-2 py-1 rounded bg-cyberdark-700 hover:bg-cyberdark-600">Open</button>
+                            <button onClick={() => setReportingTask(task)} className="text-xs px-2 py-1 rounded bg-cyberdark-700 hover:bg-cyberdark-600">Open</button>
                             <button onClick={() => setExpanded(expanded===task.id?null:task.id)} className="text-xs px-2 py-1 rounded bg-cyberdark-700 hover:bg-cyberdark-600">Details</button>
                           </div>
                           <div className="text-xs text-muted-foreground">Assignee: {task.assignee||'—'}</div>
@@ -123,6 +148,49 @@ export default function TasksBoard() {
           )
         })}
       </div>
+      {reportingTask && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-bold mb-2">Отчёт по задаче: {reportingTask.title}</h3>
+            <div className="mb-2 text-sm text-muted-foreground">ID: {reportingTask.id}</div>
+            <textarea value={reportSummary} onChange={e=>setReportSummary(e.target.value)} className="w-full border p-2 mb-2" placeholder="Краткое описание проделанной работы" />
+            <input value={evidenceLink} onChange={e=>setEvidenceLink(e.target.value)} className="w-full border p-2 mb-2" placeholder="Ссылка на CI/PR (необязательно)" />
+            <input type="file" onChange={e=>setReportFile(e.target.files ? e.target.files[0] : null)} className="mb-2" />
+            <div className="flex gap-2 justify-end">
+              <button className="px-3 py-1 border" onClick={()=>{ setReportingTask(null); setReportSummary(''); setReportFile(null); setEvidenceLink(''); }}>Отмена</button>
+              <button className="px-3 py-1 bg-cyberdark-700 text-white" onClick={async ()=>{
+                // submit report: upload file if present, then post report
+                const id = reportingTask.id
+                const attachments: any[] = []
+                if (reportFile) {
+                  const form = new FormData()
+                  form.append('file', reportFile)
+                  const up = await fetch(`/api/tasks/${id}/attachments`, { method: 'POST', body: form })
+                  if (up.ok) {
+                    const meta = await up.json()
+                    attachments.push(meta.path)
+                  }
+                }
+                const payload: any = { summary: reportSummary, attachments }
+                if (evidenceLink) payload.evidence_links = [evidenceLink]
+                const resp = await fetch(`/api/tasks/${id}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                if (resp.ok) {
+                  // refresh tasks
+                  const data = await fetch('/api/tasks').then(r=>r.json())
+                  setTasks(data)
+                  setReportingTask(null)
+                  setReportSummary('')
+                  setReportFile(null)
+                  setEvidenceLink('')
+                } else {
+                  const err = await resp.json().catch(()=>({message:'Ошибка'}))
+                  alert(err.message || 'Ошибка при отправке отчёта')
+                }
+              }}>Отправить отчёт</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
