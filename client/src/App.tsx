@@ -31,6 +31,7 @@ import VerifyOTP from "./pages/auth/VerifyOTP";
 import Profile from "./pages/profile/index";
 import Settings from "./pages/settings/index";
 import AdminPanel from "./pages/admin/FinalAdminPanel";
+import TasksBoard from "./pages/tasks/TasksBoard";
 import NotFound from "./pages/NotFound";
 
 // Admin Pages (заглушки, которые можно реализовать позже)
@@ -100,6 +101,7 @@ const App = () => {
                   <Route path="/admin/users" element={<AdminUsers />} />
                   <Route path="/admin/challenges/new" element={<AdminNewChallenge />} />
                   <Route path="/admin/challenges/edit/:id" element={<AdminEditChallenge />} />
+                  <Route path="/tasks/roadmap" element={<TasksBoard />} />
                   {/* Not Found Route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
